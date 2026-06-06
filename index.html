@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>인터벌 타이머</title>
+  <meta name="description" content="인터벌 운동 타이머 앱">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="인터벌타이머">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: #f5f5f3; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
+    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; padding-bottom: 2rem; }
+
+    .header { background: #1D9E75; color: white; padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
+    .header svg { width: 26px; height: 26px; flex-shrink: 0; }
+    .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+    .sound-toggle { background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; padding: 6px 10px; font-size: 18px; cursor: pointer; line-height: 1; }
+    .sound-toggle.muted { background: rgba(255,255,255,0.1); opacity: 0.6; }
+
+    .content { padding: 1.25rem; }
+    .section-title { font-size: 11px; font-weight: 600; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; }
+    .card { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+
+    /* Number input rows */
+    .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+    .row:last-child { border-bottom: none; padding-bottom: 0; }
+    .row:first-child { padding-top: 0; }
+    .row label { font-size: 14px; color: #555; flex: 1; }
+    .num-ctrl { display: flex; align-items: center; gap: 0; border: 1.5px solid #e0f5ee; border-radius: 10px; overflow: hidden; }
+    .num-ctrl button { background: #e1f5ee; border: none; color: #1D9E75; font-size: 20px; width: 36px; height: 36px; cursor: pointer; font-weight: 600; line-height: 1; flex-shrink: 0; }
+    .num-ctrl button:active { background: #b0dece; }
+    .num-ctrl input[type=number] { width: 56px; border: none; text-align: center; font-size: 15px; font-weight: 600; color: #1D9E75; font-family: inherit; background: #fff; outline: none; -moz-appearance: textfield; padding: 6px 0; }
+    .num-ctrl input[type=number]::-webkit-outer-spin-button,
+    .num-ctrl input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    .row .unit { font-size: 13px; color: #aaa; width: 20px; }
+
+    /* Sound settings */
+    .sound-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+    .sound-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .sound-row:first-child { padding-top: 0; }
+    .sound-row label { font-size: 14px; color: #555; flex: 1; }
+    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+    .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: #ddd; border-radius: 99px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+    .toggle input:checked + .toggle-slider { background: #1D9E75; }
+    .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+    .beep-type-row { display: flex; gap: 6px; }
+    .beep-type-btn { flex: 1; padding: 7px 4px; font-size: 13px; border: 1.5px solid #e0e0e0; border-radius: 8px; background: #fff; color: #555; cursor: pointer; font-family: inherit; text-align: center; }
+    .beep-type-btn.active { border-color: #1D9E75; background: #e1f5ee; color: #0F6E56; font-weight: 600; }
+    .vol-row { display: flex; align-items: center; gap: 10px; }
+    .vol-row span { font-size: 18px; }
+    .vol-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 99px; background: #e0f5ee; outline: none; }
+    .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #1D9E75; cursor: pointer; box-shadow: 0 1px 4px rgba(29,158,117,0.3); }
+    .vol-pct { font-size: 13px; font-weight: 600; color: #1D9E75; min-width: 36px; text-align: right; }
+    .test-btn { background: #e1f5ee; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; color: #0F6E56; cursor: pointer; font-family: inherit; font-weight: 500; }
+    .test-btn:active { background: #b0dece; }
+
+    /* Exercise list */
+    .ex-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0.75rem; }
+    .ex-item { display: flex; align-items: center; gap: 10px; background: #f7faf9; border-radius: 10px; padding: 10px 12px; border: 1px solid #e8f5ef; }
+    .ex-num { font-size: 12px; color: #aaa; width: 18px; flex-shrink: 0; font-weight: 600; }
+    .ex-input { flex: 1; background: transparent; border: none; font-size: 15px; color: #222; outline: none; font-family: inherit; }
+    .ex-input::placeholder { color: #bbb; }
+    .ex-del { background: none; border: none; cursor: pointer; color: #ccc; font-size: 20px; padding: 2px 4px; line-height: 1; border-radius: 6px; }
+    .ex-del:active { color: #e24b4a; background: #fee; }
+    .add-btn { width: 100%; background: none; border: 1.5px dashed #b0dece; border-radius: 10px; padding: 10px; font-size: 14px; color: #1D9E75; cursor: pointer; font-family: inherit; }
+    .add-btn:active { background: #e1f5ee; }
+    .start-btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: #1D9E75; color: white; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 0.75rem; box-shadow: 0 4px 16px rgba(29,158,117,0.3); font-family: inherit; }
+    .start-btn:active { background: #0F6E56; transform: scale(0.98); }
+
+    /* Timer */
+    .timer-view { display: none; flex-direction: column; min-height: calc(100vh - 58px); }
+    .timer-view.active { display: flex; }
+    .setup-view.hidden { display: none; }
+    .done-view { display: none; }
+    .done-view.active { display: flex; flex-direction: column; }
+    .phase-bar { padding: 0.6rem 1.25rem; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+    .phase-bar.exercise { background: #e1f5ee; color: #0F6E56; }
+    .phase-bar.rest { background: #fef3e0; color: #854F0B; }
+    .badges { display: flex; gap: 10px; padding: 0.75rem 1.25rem 0; }
+    .badge { font-size: 13px; background: #f5f5f3; border-radius: 99px; padding: 5px 14px; color: #555; border: 1px solid #eee; }
+    .badge strong { color: #1D9E75; }
+    .ring-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
+    .ring-wrap { width: 200px; height: 200px; margin: 0 auto 1.25rem; }
+    .ring-wrap svg { width: 200px; height: 200px; }
+    .ring-bg { fill: none; stroke: #e8f5ef; stroke-width: 14; }
+    .ring-fg { fill: none; stroke: #1D9E75; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; transform-origin: center; transform: rotate(-90deg); }
+    .ring-fg.rest-ring { stroke: #EF9F27; }
+    .ring-time { font-size: 52px; font-weight: 700; fill: #222; dominant-baseline: central; text-anchor: middle; }
+    .ring-unit { font-size: 14px; fill: #aaa; dominant-baseline: central; text-anchor: middle; }
+    .current-ex { font-size: 28px; font-weight: 700; color: #111; text-align: center; margin-bottom: 6px; }
+    .next-ex { font-size: 14px; color: #999; text-align: center; margin-bottom: 1.5rem; }
+    .progress-wrap { width: 100%; padding: 0 1.25rem; margin-bottom: 1.5rem; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 6px; }
+    .progress-track { background: #eee; border-radius: 99px; height: 6px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #1D9E75; border-radius: 99px; transition: width 0.4s; }
+    .ctrl-row { display: flex; gap: 10px; padding: 0 1.25rem 1.5rem; }
+    .ctrl-btn { flex: 1; padding: 13px 8px; border-radius: 12px; border: 1.5px solid #e0e0e0; background: #fff; font-size: 14px; cursor: pointer; color: #444; font-family: inherit; font-weight: 500; }
+    .ctrl-btn:active { background: #f5f5f5; transform: scale(0.97); }
+    .ctrl-btn.stop { color: #e24b4a; border-color: #fcc; }
+    .ctrl-btn.stop:active { background: #fff5f5; }
+
+    /* Done */
+    .done-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
+    .done-icon { font-size: 64px; margin-bottom: 1rem; }
+    .done-title { font-size: 26px; font-weight: 700; margin-bottom: 0.5rem; color: #111; }
+    .done-sub { font-size: 15px; color: #888; margin-bottom: 2rem; }
+    .done-stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
+    .done-stat .dn { font-size: 26px; font-weight: 700; color: #1D9E75; }
+    .done-stat .dl { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+    .install-banner { display: none; background: #1D9E75; color: white; padding: 12px 1.25rem; align-items: center; gap: 12px; }
+    .install-banner.show { display: flex; }
+    .install-banner p { flex: 1; font-size: 14px; }
+    .install-banner button { background: white; color: #1D9E75; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+    <h1>인터벌 타이머</h1>
+    <button class="sound-toggle" id="soundToggleBtn" title="소리 켜기/끄기">🔊</button>
+  </div>
+
+  <div class="install-banner" id="installBanner">
+    <p>홈 화면에 추가하면 앱처럼 사용할 수 있어요!</p>
+    <button id="installBtn">설치</button>
+  </div>
+
+  <!-- 설정 화면 -->
+  <div class="setup-view" id="setupView">
+    <div class="content">
+
+      <div class="section-title">타이머 설정</div>
+      <div class="card">
+        <div class="row">
+          <label>동작당 시간</label>
+          <div class="num-ctrl">
+            <button data-target="secInput" data-delta="-1">−</button>
+            <input type="number" id="secInput" value="5" min="1" max="999">
+            <button data-target="secInput" data-delta="1">+</button>
+          </div>
+          <span class="unit">초</span>
+        </div>
+        <div class="row">
+          <label>세트 반복</label>
+          <div class="num-ctrl">
+            <button data-target="setInput" data-delta="-1">−</button>
+            <input type="number" id="setInput" value="3" min="1" max="99">
+            <button data-target="setInput" data-delta="1">+</button>
+          </div>
+          <span class="unit">회</span>
+        </div>
+        <div class="row">
+          <label>세트 휴식</label>
+          <div class="num-ctrl">
+            <button data-target="restInput" data-delta="-5">−</button>
+            <input type="number" id="restInput" value="30" min="0" max="999">
+            <button data-target="restInput" data-delta="5">+</button>
+          </div>
+          <span class="unit">초</span>
+        </div>
+      </div>
+
+      <div class="section-title">소리 설정</div>
+      <div class="card">
+        <div class="sound-row">
+          <label>소리 사용</label>
+          <label class="toggle">
+            <input type="checkbox" id="soundEnabled" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="sound-row" id="beepTypeRow">
+          <label>소리 종류</label>
+          <div class="beep-type-row">
+            <button class="beep-type-btn active" data-type="short">짧게 삐</button>
+            <button class="beep-type-btn" data-type="double">삐삐</button>
+            <button class="beep-type-btn" data-type="long">길게 삐—</button>
+          </div>
+        </div>
+        <div class="sound-row" id="volRow">
+          <label>음량</label>
+          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+            <div class="vol-row">
+              <span>🔈</span>
+              <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="70">
+              <span>🔊</span>
+              <span class="vol-pct" id="volPct">70%</span>
+            </div>
+            <div style="text-align:right;">
+              <button class="test-btn" id="testSoundBtn">▶ 소리 테스트</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">동작 목록</div>
+      <div class="card">
+        <div class="ex-list" id="exList"></div>
+        <button class="add-btn" id="addExBtn">＋ 동작 추가</button>
+      </div>
+
+      <button class="start-btn" id="startBtn">▶ 운동 시작</button>
+    </div>
+  </div>
+
+  <!-- 타이머 화면 -->
+  <div class="timer-view" id="timerView">
+    <div class="phase-bar exercise" id="phaseBar">운동 중</div>
+    <div class="badges">
+      <div class="badge">세트 <strong id="setDisp">1</strong> / <strong id="setTotal">3</strong></div>
+      <div class="badge">동작 <strong id="exDisp">1</strong> / <strong id="exTotal">6</strong></div>
+    </div>
+    <div class="ring-area">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="86"/>
+          <circle class="ring-fg" cx="100" cy="100" r="86" id="ringFg"/>
+          <text class="ring-time" x="100" y="96" id="ringTime">5</text>
+          <text class="ring-unit" x="100" y="118" id="ringUnit">초</text>
+        </svg>
+      </div>
+      <div class="current-ex" id="currentEx">준비</div>
+      <div class="next-ex" id="nextEx">잠시 후 시작합니다</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>전체 진행률</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="ctrl-row">
+      <button class="ctrl-btn" id="pauseBtn">⏸ 일시정지</button>
+      <button class="ctrl-btn" id="skipBtn">⏭ 건너뛰기</button>
+      <button class="ctrl-btn stop" id="stopBtn">✕ 종료</button>
+    </div>
+  </div>
+
+  <!-- 완료 화면 -->
+  <div class="done-view" id="doneView">
+    <div class="done-wrap">
+      <div class="done-icon">🏆</div>
+      <div class="done-title">운동 완료!</div>
+      <div class="done-sub">정말 수고하셨습니다 💪</div>
+      <div class="done-stats">
+        <div class="done-stat"><div class="dn" id="doneSet">—</div><div class="dl">세트</div></div>
+        <div class="done-stat"><div class="dn" id="doneEx">—</div><div class="dl">총 동작</div></div>
+        <div class="done-stat"><div class="dn" id="doneTime">—</div><div class="dl">운동 시간</div></div>
+      </div>
+      <button class="start-btn" id="restartBtn">↩ 다시 하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const defaultExercises = ['스쿼트','런지','버피','마운틴 클라이머','플랭크','점프 잭'];
+let exercises = [...defaultExercises];
+let secPerEx = 5, totalSets = 3, restSec = 30;
+let timer = null, paused = false;
+let currentSet = 1, currentExIdx = 0, timeLeft = 0;
+let phase = 'exercise', startTime = null;
+let totalSteps = 0, completedSteps = 0;
+const C = 2 * Math.PI * 86;
+
+// Sound settings
+let soundEnabled = true;
+let beepType = 'short';
+let volume = 0.7;
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playBeep(type, vol) {
+  try {
+    const ctx = getAudioCtx();
+    const v = vol !== undefined ? vol : volume;
+
+    function tone(freq, start, dur, fadeOut) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(v * 0.8, ctx.currentTime + start);
+      if (fadeOut) gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.01);
+    }
+
+    if (type === 'short') {
+      tone(880, 0, 0.12, true);
+    } else if (type === 'double') {
+      tone(880, 0, 0.1, true);
+      tone(880, 0.18, 0.1, true);
+    } else if (type === 'long') {
+      tone(660, 0, 0.5, true);
+    }
+  } catch(e) {}
+}
+
+function playFinishBeep() {
+  try {
+    const ctx = getAudioCtx();
+    [523, 659, 784, 1047].forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = f;
+      const s = i * 0.18;
+      gain.gain.setValueAtTime(volume * 0.7, ctx.currentTime + s);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + s + 0.3);
+      osc.start(ctx.currentTime + s);
+      osc.stop(ctx.currentTime + s + 0.31);
+    });
+  } catch(e) {}
+}
+
+function beep() {
+  if (soundEnabled) playBeep(beepType);
+}
+
+function $(id){ return document.getElementById(id); }
+
+// Number controls
+document.querySelectorAll('.num-ctrl button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const inp = $(btn.dataset.target);
+    const delta = +btn.dataset.delta;
+    let val = parseInt(inp.value) + delta;
+    val = Math.max(+inp.min, Math.min(+inp.max, val));
+    inp.value = val;
+    inp.dispatchEvent(new Event('input'));
+  });
+});
+$('secInput').addEventListener('input', e => { secPerEx = Math.max(1, parseInt(e.target.value)||1); });
+$('setInput').addEventListener('input', e => { totalSets = Math.max(1, parseInt(e.target.value)||1); });
+$('restInput').addEventListener('input', e => { restSec = Math.max(0, parseInt(e.target.value)||0); });
+
+// Sound controls
+$('soundEnabled').addEventListener('change', e => {
+  soundEnabled = e.target.checked;
+  $('beepTypeRow').style.opacity = soundEnabled ? '1' : '0.4';
+  $('volRow').style.opacity = soundEnabled ? '1' : '0.4';
+  $('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
+  $('soundToggleBtn').classList.toggle('muted', !soundEnabled);
+});
+
+document.querySelectorAll('.beep-type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.beep-type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    beepType = btn.dataset.type;
+  });
+});
+
+$('volSlider').addEventListener('input', e => {
+  volume = e.target.value / 100;
+  $('volPct').textContent = e.target.value + '%';
+});
+
+$('testSoundBtn').addEventListener('click', () => {
+  if (!soundEnabled) { alert('소리가 꺼져 있어요. 먼저 소리를 켜주세요.'); return; }
+  playBeep(beepType, volume);
+});
+
+$('soundToggleBtn').addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  $('soundEnabled').checked = soundEnabled;
+  $('beepTypeRow').style.opacity = soundEnabled ? '1' : '0.4';
+  $('volRow').style.opacity = soundEnabled ? '1' : '0.4';
+  $('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
+  $('soundToggleBtn').classList.toggle('muted', !soundEnabled);
+});
+
+// Exercise list
+function renderExList() {
+  const list = $('exList');
+  list.innerHTML = '';
+  exercises.forEach((ex, i) => {
+    const item = document.createElement('div');
+    item.className = 'ex-item';
+    item.innerHTML = `<span class="ex-num">${i+1}</span>
+      <input class="ex-input" type="text" value="${ex}" placeholder="동작 이름" data-i="${i}">
+      <button class="ex-del" data-i="${i}">×</button>`;
+    list.appendChild(item);
+  });
+  list.querySelectorAll('.ex-input').forEach(inp => inp.addEventListener('change', e => { exercises[+e.target.dataset.i] = e.target.value; }));
+  list.querySelectorAll('.ex-del').forEach(btn => btn.addEventListener('click', e => { exercises.splice(+e.currentTarget.dataset.i,1); renderExList(); }));
+}
+
+function updateRing(frac, time) {
+  const offset = C * (1 - Math.max(0, frac));
+  $('ringFg').style.strokeDasharray = C;
+  $('ringFg').style.strokeDashoffset = offset;
+  $('ringTime').textContent = time;
+}
+function updateProgress() {
+  const pct = Math.round((completedSteps / totalSteps) * 100);
+  $('progressFill').style.width = pct + '%';
+  $('progressPct').textContent = pct + '%';
+}
+
+function showSetup(){ $('setupView').classList.remove('hidden'); $('timerView').classList.remove('active'); $('doneView').classList.remove('active'); }
+function showTimer(){ $('setupView').classList.add('hidden'); $('timerView').classList.add('active'); $('doneView').classList.remove('active'); }
+function showDone(){ $('setupView').classList.add('hidden'); $('timerView').classList.remove('active'); $('doneView').classList.add('active'); }
+
+function startExercise() {
+  phase='exercise'; timeLeft=secPerEx;
+  $('phaseBar').textContent='운동 중'; $('phaseBar').className='phase-bar exercise';
+  $('ringFg').className='ring-fg';
+  tick();
+}
+function startRest() {
+  if(restSec===0){ currentSet++; currentExIdx=0; startExercise(); return; }
+  phase='rest'; timeLeft=restSec;
+  $('phaseBar').textContent='세트 휴식 중'; $('phaseBar').className='phase-bar rest';
+  $('ringFg').className='ring-fg rest-ring';
+  $('currentEx').textContent='휴식';
+  $('nextEx').textContent=`다음 세트: ${currentSet+1} / ${totalSets}`;
+  tick();
+}
+
+function tick() {
+  clearInterval(timer);
+  if(paused) return;
+  updateDisplay();
+  timer = setInterval(() => {
+    if(paused) return;
+    timeLeft--;
+    if(timeLeft<=0){ clearInterval(timer); onStepDone(); }
+    else updateDisplay();
+  }, 1000);
+}
+
+function updateDisplay() {
+  if(phase==='exercise'){
+    const ex=exercises[currentExIdx]||'—';
+    const nxt=exercises[currentExIdx+1];
+    $('currentEx').textContent=ex;
+    $('nextEx').textContent=nxt?`다음: ${nxt}`:(currentSet<totalSets&&restSec>0?'다음: 휴식':'마지막 동작!');
+    $('setDisp').textContent=currentSet;
+    $('exDisp').textContent=currentExIdx+1;
+  }
+  updateRing(timeLeft/(phase==='rest'?restSec:secPerEx), timeLeft);
+  updateProgress();
+}
+
+function onStepDone() {
+  beep();
+  completedSteps++;
+  if(phase==='exercise'){
+    currentExIdx++;
+    if(currentExIdx>=exercises.length){
+      if(currentSet>=totalSets){ finishWorkout(); return; }
+      restSec>0 ? startRest() : (currentSet++, currentExIdx=0, startExercise());
+    } else startExercise();
+  } else if(phase==='rest'){ currentSet++; currentExIdx=0; startExercise(); }
+}
+
+function finishWorkout() {
+  clearInterval(timer);
+  if(soundEnabled) playFinishBeep();
+  const elapsed=Math.round((Date.now()-startTime)/1000);
+  const mm=Math.floor(elapsed/60), ss=elapsed%60;
+  $('doneSet').textContent=totalSets;
+  $('doneEx').textContent=exercises.length*totalSets;
+  $('doneTime').textContent=mm>0?`${mm}분 ${ss}초`:`${ss}초`;
+  showDone();
+}
+
+$('addExBtn').addEventListener('click', ()=>{
+  exercises.push(''); renderExList();
+  const ins=document.querySelectorAll('.ex-input'); ins[ins.length-1].focus();
+});
+
+$('startBtn').addEventListener('click', ()=>{
+  exercises=exercises.filter(e=>e.trim()!=='');
+  if(exercises.length===0){alert('동작을 최소 1개 이상 입력해주세요.'); return;}
+  secPerEx=Math.max(1,parseInt($('secInput').value)||1);
+  totalSets=Math.max(1,parseInt($('setInput').value)||1);
+  restSec=Math.max(0,parseInt($('restInput').value)||0);
+  currentSet=1; currentExIdx=0; paused=false;
+  startTime=Date.now();
+  totalSteps=exercises.length*totalSets+(restSec>0?(totalSets-1):0);
+  completedSteps=0;
+  $('exTotal').textContent=exercises.length;
+  $('setTotal').textContent=totalSets;
+  showTimer(); startExercise();
+});
+
+$('pauseBtn').addEventListener('click', ()=>{
+  paused=!paused;
+  $('pauseBtn').textContent=paused?'▶ 계속':'⏸ 일시정지';
+  if(!paused) tick();
+});
+$('skipBtn').addEventListener('click', ()=>{ clearInterval(timer); timeLeft=0; onStepDone(); });
+$('stopBtn').addEventListener('click', ()=>{ clearInterval(timer); paused=false; showSetup(); });
+$('restartBtn').addEventListener('click', ()=>showSetup());
+
+// PWA
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; $('installBanner').classList.add('show'); });
+$('installBtn').addEventListener('click', ()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; $('installBanner').classList.remove('show'); }); });
+window.addEventListener('appinstalled', ()=>$('installBanner').classList.remove('show'));
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+renderExList();
+</script>
+</body>
+</html>

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>인터벌 타이머</title>
-  <meta name="description" content="인터벌 운동 타이머 앱">
   <meta name="theme-color" content="#1D9E75">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,124 +11,154 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; background: #f5f5f3; font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
-    .app { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #fff; padding-bottom: 2rem; }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;background:#f5f5f3;font-family:-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;}
+    .app{max-width:480px;margin:0 auto;min-height:100vh;background:#fff;padding-bottom:2.5rem;}
 
-    .header { background: #1D9E75; color: white; padding: 1.1rem 1.25rem; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 10; }
-    .header svg { width: 26px; height: 26px; flex-shrink: 0; }
-    .header h1 { font-size: 18px; font-weight: 600; flex: 1; }
-    .sound-toggle { background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; padding: 6px 10px; font-size: 18px; cursor: pointer; line-height: 1; }
-    .sound-toggle.muted { background: rgba(255,255,255,0.1); opacity: 0.6; }
+    /* HEADER */
+    .header{background:#1D9E75;color:white;padding:1.1rem 1.25rem;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+    .header svg{width:26px;height:26px;flex-shrink:0;}
+    .header h1{font-size:18px;font-weight:600;flex:1;}
+    .sound-toggle{background:rgba(255,255,255,0.2);border:none;border-radius:8px;color:white;padding:6px 10px;font-size:18px;cursor:pointer;line-height:1;}
+    .sound-toggle.muted{opacity:0.5;}
 
-    .content { padding: 1.25rem; }
-    .section-title { font-size: 11px; font-weight: 600; color: #888; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.6rem; }
-    .card { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    /* LAYOUT */
+    .content{padding:1.25rem;}
+    .section-title{font-size:11px;font-weight:600;color:#888;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.6rem;}
+    .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
 
-    /* Number input rows */
-    .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
-    .row:last-child { border-bottom: none; padding-bottom: 0; }
-    .row:first-child { padding-top: 0; }
-    .row label { font-size: 14px; color: #555; flex: 1; }
-    .num-ctrl { display: flex; align-items: center; gap: 0; border: 1.5px solid #e0f5ee; border-radius: 10px; overflow: hidden; }
-    .num-ctrl button { background: #e1f5ee; border: none; color: #1D9E75; font-size: 20px; width: 36px; height: 36px; cursor: pointer; font-weight: 600; line-height: 1; flex-shrink: 0; }
-    .num-ctrl button:active { background: #b0dece; }
-    .num-ctrl input[type=number] { width: 56px; border: none; text-align: center; font-size: 15px; font-weight: 600; color: #1D9E75; font-family: inherit; background: #fff; outline: none; -moz-appearance: textfield; padding: 6px 0; }
-    .num-ctrl input[type=number]::-webkit-outer-spin-button,
-    .num-ctrl input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-    .row .unit { font-size: 13px; color: #aaa; width: 20px; }
+    /* NUMBER INPUT ROW */
+    .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5;}
+    .row:last-child{border-bottom:none;padding-bottom:0;}
+    .row:first-child{padding-top:0;}
+    .row label{font-size:14px;color:#555;flex:1;}
+    .num-ctrl{display:flex;align-items:center;border:1.5px solid #e0f5ee;border-radius:10px;overflow:hidden;}
+    .num-ctrl button{background:#e1f5ee;border:none;color:#1D9E75;font-size:20px;width:38px;height:38px;cursor:pointer;font-weight:600;line-height:1;flex-shrink:0;}
+    .num-ctrl button:active{background:#b0dece;}
+    .num-ctrl input[type=number]{width:60px;border:none;text-align:center;font-size:15px;font-weight:600;color:#1D9E75;font-family:inherit;background:#fff;outline:none;-moz-appearance:textfield;padding:7px 0;}
+    .num-ctrl input[type=number]::-webkit-outer-spin-button,.num-ctrl input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+    .row .unit{font-size:13px;color:#aaa;width:20px;}
 
-    /* Sound settings */
-    .sound-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
-    .sound-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .sound-row:first-child { padding-top: 0; }
-    .sound-row label { font-size: 14px; color: #555; flex: 1; }
-    .toggle-wrap { display: flex; align-items: center; gap: 8px; }
-    .toggle { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; inset: 0; background: #ddd; border-radius: 99px; cursor: pointer; transition: background 0.2s; }
-    .toggle-slider:before { content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-    .toggle input:checked + .toggle-slider { background: #1D9E75; }
-    .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
-    .beep-type-row { display: flex; gap: 6px; }
-    .beep-type-btn { flex: 1; padding: 7px 4px; font-size: 13px; border: 1.5px solid #e0e0e0; border-radius: 8px; background: #fff; color: #555; cursor: pointer; font-family: inherit; text-align: center; }
-    .beep-type-btn.active { border-color: #1D9E75; background: #e1f5ee; color: #0F6E56; font-weight: 600; }
-    .vol-row { display: flex; align-items: center; gap: 10px; }
-    .vol-row span { font-size: 18px; }
-    .vol-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 99px; background: #e0f5ee; outline: none; }
-    .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #1D9E75; cursor: pointer; box-shadow: 0 1px 4px rgba(29,158,117,0.3); }
-    .vol-pct { font-size: 13px; font-weight: 600; color: #1D9E75; min-width: 36px; text-align: right; }
-    .test-btn { background: #e1f5ee; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; color: #0F6E56; cursor: pointer; font-family: inherit; font-weight: 500; }
-    .test-btn:active { background: #b0dece; }
+    /* SOUND CARD */
+    .srow{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5f5;}
+    .srow:last-child{border-bottom:none;padding-bottom:0;}
+    .srow:first-child{padding-top:0;}
+    .srow>.slabel{font-size:14px;color:#555;width:80px;flex-shrink:0;padding-top:3px;}
+    .srow>.scontent{flex:1;display:flex;flex-direction:column;gap:6px;}
+    .toggle{position:relative;width:44px;height:26px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:#ddd;border-radius:99px;cursor:pointer;transition:background .2s;}
+    .toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:white;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15);}
+    .toggle input:checked+.toggle-slider{background:#1D9E75;}
+    .toggle input:checked+.toggle-slider:before{transform:translateX(18px);}
+    .chip-row{display:flex;flex-wrap:wrap;gap:6px;}
+    .chip{padding:6px 12px;font-size:13px;border:1.5px solid #e0e0e0;border-radius:99px;background:#fff;color:#555;cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .chip.active{border-color:#1D9E75;background:#e1f5ee;color:#0F6E56;font-weight:600;}
+    .chip:active{background:#f0faf5;}
+    .vol-line{display:flex;align-items:center;gap:8px;}
+    .vol-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:99px;background:#e0f5ee;outline:none;}
+    .vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#1D9E75;cursor:pointer;box-shadow:0 1px 4px rgba(29,158,117,.3);}
+    .vol-pct{font-size:13px;font-weight:600;color:#1D9E75;min-width:34px;text-align:right;}
+    .test-btn{background:#e1f5ee;border:none;border-radius:8px;padding:6px 12px;font-size:12px;color:#0F6E56;cursor:pointer;font-family:inherit;font-weight:500;}
+    .test-btn:active{background:#b0dece;}
+    .hint{font-size:11px;color:#bbb;margin-top:2px;}
 
-    /* Exercise list */
-    .ex-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0.75rem; }
-    .ex-item { display: flex; align-items: center; gap: 10px; background: #f7faf9; border-radius: 10px; padding: 10px 12px; border: 1px solid #e8f5ef; }
-    .ex-num { font-size: 12px; color: #aaa; width: 18px; flex-shrink: 0; font-weight: 600; }
-    .ex-input { flex: 1; background: transparent; border: none; font-size: 15px; color: #222; outline: none; font-family: inherit; }
-    .ex-input::placeholder { color: #bbb; }
-    .ex-del { background: none; border: none; cursor: pointer; color: #ccc; font-size: 20px; padding: 2px 4px; line-height: 1; border-radius: 6px; }
-    .ex-del:active { color: #e24b4a; background: #fee; }
-    .add-btn { width: 100%; background: none; border: 1.5px dashed #b0dece; border-radius: 10px; padding: 10px; font-size: 14px; color: #1D9E75; cursor: pointer; font-family: inherit; }
-    .add-btn:active { background: #e1f5ee; }
-    .start-btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: #1D9E75; color: white; font-size: 17px; font-weight: 600; cursor: pointer; margin-top: 0.75rem; box-shadow: 0 4px 16px rgba(29,158,117,0.3); font-family: inherit; }
-    .start-btn:active { background: #0F6E56; transform: scale(0.98); }
+    /* EXERCISE LIST */
+    .ex-list{display:flex;flex-direction:column;gap:8px;margin-bottom:.75rem;}
+    .ex-item{display:flex;align-items:center;gap:10px;background:#f7faf9;border-radius:10px;padding:10px 12px;border:1px solid #e8f5ef;}
+    .ex-num{font-size:12px;color:#aaa;width:18px;flex-shrink:0;font-weight:600;}
+    .ex-input{flex:1;background:transparent;border:none;font-size:15px;color:#222;outline:none;font-family:inherit;}
+    .ex-input::placeholder{color:#bbb;}
+    .ex-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:20px;padding:2px 4px;line-height:1;border-radius:6px;}
+    .ex-del:active{color:#e24b4a;background:#fee;}
+    .add-btn{width:100%;background:none;border:1.5px dashed #b0dece;border-radius:10px;padding:10px;font-size:14px;color:#1D9E75;cursor:pointer;font-family:inherit;}
+    .add-btn:active{background:#e1f5ee;}
+    .start-btn{width:100%;padding:16px;border:none;border-radius:16px;background:#1D9E75;color:white;font-size:17px;font-weight:600;cursor:pointer;margin-top:.75rem;box-shadow:0 4px 16px rgba(29,158,117,.3);font-family:inherit;}
+    .start-btn:active{background:#0F6E56;transform:scale(.98);}
 
-    /* Timer */
-    .timer-view { display: none; flex-direction: column; min-height: calc(100vh - 58px); }
-    .timer-view.active { display: flex; }
-    .setup-view.hidden { display: none; }
-    .done-view { display: none; }
-    .done-view.active { display: flex; flex-direction: column; }
-    .phase-bar { padding: 0.6rem 1.25rem; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
-    .phase-bar.exercise { background: #e1f5ee; color: #0F6E56; }
-    .phase-bar.rest { background: #fef3e0; color: #854F0B; }
-    .badges { display: flex; gap: 10px; padding: 0.75rem 1.25rem 0; }
-    .badge { font-size: 13px; background: #f5f5f3; border-radius: 99px; padding: 5px 14px; color: #555; border: 1px solid #eee; }
-    .badge strong { color: #1D9E75; }
-    .ring-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
-    .ring-wrap { width: 200px; height: 200px; margin: 0 auto 1.25rem; }
-    .ring-wrap svg { width: 200px; height: 200px; }
-    .ring-bg { fill: none; stroke: #e8f5ef; stroke-width: 14; }
-    .ring-fg { fill: none; stroke: #1D9E75; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 0.9s linear; transform-origin: center; transform: rotate(-90deg); }
-    .ring-fg.rest-ring { stroke: #EF9F27; }
-    .ring-time { font-size: 52px; font-weight: 700; fill: #222; dominant-baseline: central; text-anchor: middle; }
-    .ring-unit { font-size: 14px; fill: #aaa; dominant-baseline: central; text-anchor: middle; }
-    .current-ex { font-size: 28px; font-weight: 700; color: #111; text-align: center; margin-bottom: 6px; }
-    .next-ex { font-size: 14px; color: #999; text-align: center; margin-bottom: 1.5rem; }
-    .progress-wrap { width: 100%; padding: 0 1.25rem; margin-bottom: 1.5rem; }
-    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 6px; }
-    .progress-track { background: #eee; border-radius: 99px; height: 6px; overflow: hidden; }
-    .progress-fill { height: 100%; background: #1D9E75; border-radius: 99px; transition: width 0.4s; }
-    .ctrl-row { display: flex; gap: 10px; padding: 0 1.25rem 1.5rem; }
-    .ctrl-btn { flex: 1; padding: 13px 8px; border-radius: 12px; border: 1.5px solid #e0e0e0; background: #fff; font-size: 14px; cursor: pointer; color: #444; font-family: inherit; font-weight: 500; }
-    .ctrl-btn:active { background: #f5f5f5; transform: scale(0.97); }
-    .ctrl-btn.stop { color: #e24b4a; border-color: #fcc; }
-    .ctrl-btn.stop:active { background: #fff5f5; }
+    /* TIMER VIEW */
+    .timer-view{display:none;flex-direction:column;min-height:calc(100vh - 58px);}
+    .timer-view.active{display:flex;}
+    .setup-view.hidden{display:none;}
+    .done-view{display:none;}
+    .done-view.active{display:flex;flex-direction:column;}
 
-    /* Done */
-    .done-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1.5rem; text-align: center; }
-    .done-icon { font-size: 64px; margin-bottom: 1rem; }
-    .done-title { font-size: 26px; font-weight: 700; margin-bottom: 0.5rem; color: #111; }
-    .done-sub { font-size: 15px; color: #888; margin-bottom: 2rem; }
-    .done-stats { display: flex; gap: 1.5rem; margin-bottom: 2rem; }
-    .done-stat .dn { font-size: 26px; font-weight: 700; color: #1D9E75; }
-    .done-stat .dl { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .phase-bar{padding:.6rem 1.25rem;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;}
+    .phase-bar.exercise{background:#e1f5ee;color:#0F6E56;}
+    .phase-bar.rest{background:#fef3e0;color:#854F0B;}
+    .phase-bar.rest.danger{background:#fde8e8;color:#c0392b;}
+    .reset-btn{background:rgba(0,0,0,.08);border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;color:inherit;font-family:inherit;}
+    .reset-btn:active{background:rgba(0,0,0,.18);}
 
-    .install-banner { display: none; background: #1D9E75; color: white; padding: 12px 1.25rem; align-items: center; gap: 12px; }
-    .install-banner.show { display: flex; }
-    .install-banner p { flex: 1; font-size: 14px; }
-    .install-banner button { background: white; color: #1D9E75; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .badges{display:flex;gap:10px;padding:.75rem 1.25rem 0;}
+    .badge{font-size:13px;background:#f5f5f3;border-radius:99px;padding:5px 14px;color:#555;border:1px solid #eee;}
+    .badge strong{color:#1D9E75;}
+
+    .ring-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
+    .ring-wrap{width:200px;height:200px;margin:0 auto 1.25rem;}
+    .ring-wrap svg{width:200px;height:200px;}
+    .ring-bg{fill:none;stroke:#e8f5ef;stroke-width:14;}
+    .ring-fg{fill:none;stroke:#1D9E75;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .9s linear;transform-origin:center;transform:rotate(-90deg);}
+    .ring-fg.rest-ring{stroke:#EF9F27;}
+    .ring-fg.danger-ring{stroke:#E24B4A;}
+    .ring-time{font-size:52px;font-weight:700;fill:#222;dominant-baseline:central;text-anchor:middle;}
+    .ring-unit{font-size:14px;fill:#aaa;dominant-baseline:central;text-anchor:middle;}
+    .current-ex{font-size:28px;font-weight:700;color:#111;text-align:center;margin-bottom:6px;}
+    .next-ex{font-size:14px;color:#999;text-align:center;margin-bottom:1.5rem;}
+
+    /* countdown flash */
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+    .ring-fg.danger-ring{animation:pulse .6s ease-in-out infinite;}
+
+    .progress-wrap{width:100%;padding:0 1.25rem;margin-bottom:1.5rem;}
+    .progress-label{display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-bottom:6px;}
+    .progress-track{background:#eee;border-radius:99px;height:6px;overflow:hidden;}
+    .progress-fill{height:100%;background:#1D9E75;border-radius:99px;transition:width .4s;}
+
+    .ctrl-row{display:flex;gap:10px;padding:0 1.25rem 1.5rem;}
+    .ctrl-btn{flex:1;padding:13px 8px;border-radius:12px;border:1.5px solid #e0e0e0;background:#fff;font-size:14px;cursor:pointer;color:#444;font-family:inherit;font-weight:500;}
+    .ctrl-btn:active{background:#f5f5f5;transform:scale(.97);}
+    .ctrl-btn.stop{color:#e24b4a;border-color:#fcc;}
+    .ctrl-btn.stop:active{background:#fff5f5;}
+
+    /* DONE */
+    .done-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.5rem;text-align:center;}
+    .done-icon{font-size:64px;margin-bottom:1rem;}
+    .done-title{font-size:26px;font-weight:700;margin-bottom:.5rem;color:#111;}
+    .done-sub{font-size:15px;color:#888;margin-bottom:2rem;}
+    .done-stats{display:flex;gap:1.5rem;margin-bottom:2rem;}
+    .done-stat .dn{font-size:26px;font-weight:700;color:#1D9E75;}
+    .done-stat .dl{font-size:12px;color:#aaa;margin-top:2px;}
+
+    /* MODAL */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center;}
+    .modal-overlay.show{display:flex;}
+    .modal{background:#fff;border-radius:20px 20px 0 0;padding:1.5rem 1.25rem 2rem;width:100%;max-width:480px;}
+    .modal-title{font-size:16px;font-weight:700;margin-bottom:4px;color:#111;}
+    .modal-sub{font-size:13px;color:#aaa;margin-bottom:1.25rem;}
+    .modal-btns{display:flex;gap:10px;margin-top:1.25rem;}
+    .modal-btns button{flex:1;padding:14px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;}
+    .btn-cancel{background:#f5f5f3;color:#555;}
+    .btn-apply{background:#1D9E75;color:white;}
+    .btn-apply:active{background:#0F6E56;}
+    .btn-cancel:active{background:#e8e8e8;}
+
+    /* INSTALL */
+    .install-banner{display:none;background:#1D9E75;color:white;padding:12px 1.25rem;align-items:center;gap:12px;}
+    .install-banner.show{display:flex;}
+    .install-banner p{flex:1;font-size:14px;}
+    .install-banner button{background:white;color:#1D9E75;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
   </style>
 </head>
 <body>
 <div class="app">
+
   <div class="header">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
     </svg>
     <h1>인터벌 타이머</h1>
-    <button class="sound-toggle" id="soundToggleBtn" title="소리 켜기/끄기">🔊</button>
+    <button class="sound-toggle" id="soundToggleBtn">🔊</button>
   </div>
 
   <div class="install-banner" id="installBanner">
@@ -137,7 +166,7 @@
     <button id="installBtn">설치</button>
   </div>
 
-  <!-- 설정 화면 -->
+  <!-- ─── 설정 화면 ─── -->
   <div class="setup-view" id="setupView">
     <div class="content">
 
@@ -174,36 +203,64 @@
 
       <div class="section-title">소리 설정</div>
       <div class="card">
-        <div class="sound-row">
-          <label>소리 사용</label>
-          <label class="toggle">
-            <input type="checkbox" id="soundEnabled" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="sound-row" id="beepTypeRow">
-          <label>소리 종류</label>
-          <div class="beep-type-row">
-            <button class="beep-type-btn active" data-type="short">짧게 삐</button>
-            <button class="beep-type-btn" data-type="double">삐삐</button>
-            <button class="beep-type-btn" data-type="long">길게 삐—</button>
+
+        <!-- 소리 ON/OFF -->
+        <div class="srow" style="align-items:center;">
+          <span class="slabel">소리 사용</span>
+          <div class="scontent" style="flex-direction:row;align-items:center;gap:10px;">
+            <label class="toggle">
+              <input type="checkbox" id="soundEnabled" checked>
+              <span class="toggle-slider"></span>
+            </label>
           </div>
         </div>
-        <div class="sound-row" id="volRow">
-          <label>음량</label>
-          <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-            <div class="vol-row">
-              <span>🔈</span>
-              <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="70">
-              <span>🔊</span>
-              <span class="vol-pct" id="volPct">70%</span>
-            </div>
-            <div style="text-align:right;">
-              <button class="test-btn" id="testSoundBtn">▶ 소리 테스트</button>
+
+        <div id="soundOptions">
+          <!-- 동작 전환음 -->
+          <div class="srow">
+            <span class="slabel">동작 전환음</span>
+            <div class="scontent">
+              <div class="chip-row" id="exBeepBtns">
+                <button class="chip active" data-type="ex" data-sound="ping">🔔 띵!</button>
+                <button class="chip" data-type="ex" data-sound="up">📈 띠딩↑</button>
+                <button class="chip" data-type="ex" data-sound="whistle">📣 삐익~</button>
+                <button class="chip" data-type="ex" data-sound="pop">🫧 뽁!</button>
+                <button class="chip" data-type="ex" data-sound="dding">🎵 딩동</button>
+              </div>
+              <button class="test-btn" id="testExBtn">▶ 미리 듣기</button>
             </div>
           </div>
-        </div>
-      </div>
+
+          <!-- 휴식 카운트다운음 -->
+          <div class="srow">
+            <span class="slabel">휴식 카운트다운</span>
+            <div class="scontent">
+              <div class="chip-row" id="restBeepBtns">
+                <button class="chip active" data-type="rest" data-sound="tick">띠·띠·띠</button>
+                <button class="chip" data-type="rest" data-sound="blip">삑·삑·삑</button>
+                <button class="chip" data-type="rest" data-sound="drum">둑·둑·둑</button>
+                <button class="chip" data-type="rest" data-sound="wood">딱·딱·딱</button>
+              </div>
+              <div class="hint">💡 휴식 마지막 5초마다 단음 → 종료 시 길게 띠~~</div>
+              <button class="test-btn" id="testRestBtn">▶ 카운트다운 미리 듣기</button>
+            </div>
+          </div>
+
+          <!-- 음량 -->
+          <div class="srow">
+            <span class="slabel">음량</span>
+            <div class="scontent">
+              <div class="vol-line">
+                <span style="font-size:16px;">🔈</span>
+                <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="70">
+                <span style="font-size:16px;">🔊</span>
+                <span class="vol-pct" id="volPct">70%</span>
+              </div>
+            </div>
+          </div>
+        </div><!-- /soundOptions -->
+
+      </div><!-- /card -->
 
       <div class="section-title">동작 목록</div>
       <div class="card">
@@ -215,9 +272,12 @@
     </div>
   </div>
 
-  <!-- 타이머 화면 -->
+  <!-- ─── 타이머 화면 ─── -->
   <div class="timer-view" id="timerView">
-    <div class="phase-bar exercise" id="phaseBar">운동 중</div>
+    <div class="phase-bar exercise" id="phaseBar">
+      <span id="phaseLabel">운동 중</span>
+      <button class="reset-btn" id="resetBtn">⚙ 재설정</button>
+    </div>
     <div class="badges">
       <div class="badge">세트 <strong id="setDisp">1</strong> / <strong id="setTotal">3</strong></div>
       <div class="badge">동작 <strong id="exDisp">1</strong> / <strong id="exTotal">6</strong></div>
@@ -228,7 +288,7 @@
           <circle class="ring-bg" cx="100" cy="100" r="86"/>
           <circle class="ring-fg" cx="100" cy="100" r="86" id="ringFg"/>
           <text class="ring-time" x="100" y="96" id="ringTime">5</text>
-          <text class="ring-unit" x="100" y="118" id="ringUnit">초</text>
+          <text class="ring-unit" x="100" y="118">초</text>
         </svg>
       </div>
       <div class="current-ex" id="currentEx">준비</div>
@@ -250,7 +310,7 @@
     </div>
   </div>
 
-  <!-- 완료 화면 -->
+  <!-- ─── 완료 화면 ─── -->
   <div class="done-view" id="doneView">
     <div class="done-wrap">
       <div class="done-icon">🏆</div>
@@ -264,197 +324,288 @@
       <button class="start-btn" id="restartBtn">↩ 다시 하기</button>
     </div>
   </div>
+
+</div><!-- /app -->
+
+<!-- ─── 재설정 모달 ─── -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-title">⚙ 운동 재설정</div>
+    <div class="modal-sub">변경된 설정으로 지금 위치에서 이어서 진행됩니다</div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="row">
+        <label>동작당 시간</label>
+        <div class="num-ctrl">
+          <button data-target="rSecInput" data-delta="-1">−</button>
+          <input type="number" id="rSecInput" value="5" min="1" max="999">
+          <button data-target="rSecInput" data-delta="1">+</button>
+        </div>
+        <span class="unit">초</span>
+      </div>
+      <div class="row">
+        <label>세트 반복</label>
+        <div class="num-ctrl">
+          <button data-target="rSetInput" data-delta="-1">−</button>
+          <input type="number" id="rSetInput" value="3" min="1" max="99">
+          <button data-target="rSetInput" data-delta="1">+</button>
+        </div>
+        <span class="unit">회</span>
+      </div>
+      <div class="row">
+        <label>세트 휴식</label>
+        <div class="num-ctrl">
+          <button data-target="rRestInput" data-delta="-5">−</button>
+          <input type="number" id="rRestInput" value="30" min="0" max="999">
+          <button data-target="rRestInput" data-delta="5">+</button>
+        </div>
+        <span class="unit">초</span>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="modalCancel">취소</button>
+      <button class="btn-apply" id="modalApply">✓ 적용하고 이어서</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const defaultExercises = ['스쿼트','런지','버피','마운틴 클라이머','플랭크','점프 잭'];
 let exercises = [...defaultExercises];
-let secPerEx = 5, totalSets = 3, restSec = 30;
-let timer = null, paused = false;
-let currentSet = 1, currentExIdx = 0, timeLeft = 0;
-let phase = 'exercise', startTime = null;
-let totalSteps = 0, completedSteps = 0;
-const C = 2 * Math.PI * 86;
+let secPerEx=5, totalSets=3, restSec=30;
+let timer=null, paused=false;
+let currentSet=1, currentExIdx=0, timeLeft=0;
+let phase='exercise', startTime=null;
+let totalSteps=0, completedSteps=0;
+const C = 2*Math.PI*86;
 
-// Sound settings
-let soundEnabled = true;
-let beepType = 'short';
-let volume = 0.7;
-let audioCtx = null;
+// Sound state
+let soundEnabled=true, exSound='ping', restSound='tick', volume=0.7;
+let audioCtx=null;
 
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+function getCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
   return audioCtx;
 }
 
-function playBeep(type, vol) {
-  try {
-    const ctx = getAudioCtx();
-    const v = vol !== undefined ? vol : volume;
+// Core tone generator
+function tone(ctx,freq,start,dur,vol,type='sine',freqEnd=null){
+  const osc=ctx.createOscillator(), g=ctx.createGain();
+  osc.connect(g); g.connect(ctx.destination);
+  osc.type=type;
+  osc.frequency.setValueAtTime(freq, ctx.currentTime+start);
+  if(freqEnd!==null) osc.frequency.linearRampToValueAtTime(freqEnd, ctx.currentTime+start+dur);
+  g.gain.setValueAtTime(Math.min(vol,1), ctx.currentTime+start);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+start+dur);
+  osc.start(ctx.currentTime+start);
+  osc.stop(ctx.currentTime+start+dur+0.02);
+}
 
-    function tone(freq, start, dur, fadeOut) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(v * 0.8, ctx.currentTime + start);
-      if (fadeOut) gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur + 0.01);
+// ── 동작 전환음 5종 ──
+function playExBeep(snd, vol){
+  const v=vol??volume;
+  try{
+    const c=getCtx();
+    if(snd==='ping'){
+      // 맑은 띵!
+      tone(c,1046,0,0.07,v*0.9);
+      tone(c,1318,0.05,0.15,v*0.55);
+    } else if(snd==='up'){
+      // 띠딩↑ 상승
+      tone(c,660,0,0.1,v*0.8,'sine',990);
+      tone(c,990,0.14,0.16,v*0.7,'sine',1200);
+    } else if(snd==='whistle'){
+      // 삐익~ 호루라기
+      tone(c,1300,0,0.04,v*0.9,'square');
+      tone(c,1500,0.04,0.2,v*0.5,'sine',1400);
+    } else if(snd==='pop'){
+      // 뽁! 통통
+      tone(c,400,0,0.04,v,'triangle',100);
+      tone(c,900,0,0.07,v*0.35,'sine');
+    } else if(snd==='dding'){
+      // 딩동 2음
+      tone(c,784,0,0.13,v*0.8);
+      tone(c,523,0.16,0.2,v*0.7);
     }
+  }catch(e){}
+}
 
-    if (type === 'short') {
-      tone(880, 0, 0.12, true);
-    } else if (type === 'double') {
-      tone(880, 0, 0.1, true);
-      tone(880, 0.18, 0.1, true);
-    } else if (type === 'long') {
-      tone(660, 0, 0.5, true);
+// ── 휴식 카운트다운 단음 4종 ──
+function playRestTick(snd, vol){
+  const v=vol??volume;
+  try{
+    const c=getCtx();
+    if(snd==='tick'){
+      tone(c,880,0,0.07,v*0.65);
+    } else if(snd==='blip'){
+      tone(c,1600,0,0.05,v*0.55,'square');
+    } else if(snd==='drum'){
+      tone(c,200,0,0.12,v*0.8,'triangle',80);
+    } else if(snd==='wood'){
+      tone(c,600,0,0.04,v*0.9,'triangle');
+      tone(c,400,0.02,0.06,v*0.5,'triangle');
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
-function playFinishBeep() {
-  try {
-    const ctx = getAudioCtx();
-    [523, 659, 784, 1047].forEach((f, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.frequency.value = f;
-      const s = i * 0.18;
-      gain.gain.setValueAtTime(volume * 0.7, ctx.currentTime + s);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + s + 0.3);
-      osc.start(ctx.currentTime + s);
-      osc.stop(ctx.currentTime + s + 0.31);
-    });
-  } catch(e) {}
+// ── 휴식 종료 길게 띠~~ ──
+function playRestEnd(vol){
+  const v=vol??volume;
+  try{
+    const c=getCtx();
+    // 짧은 알림 후 길게 이어지는 상승 신호음
+    tone(c,880,0,0.06,v*0.7);
+    tone(c,880,0.08,0.06,v*0.7);
+    tone(c,1100,0.18,0.7,v*0.9,'sine',1200);
+  }catch(e){}
 }
 
-function beep() {
-  if (soundEnabled) playBeep(beepType);
+// ── 운동 완료 팡파레 ──
+function playFinish(){
+  try{
+    const c=getCtx();
+    [523,659,784,1047].forEach((f,i)=>tone(c,f,i*0.18,0.28,volume*0.7));
+  }catch(e){}
 }
 
-function $(id){ return document.getElementById(id); }
+function $(id){return document.getElementById(id);}
 
-// Number controls
-document.querySelectorAll('.num-ctrl button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const inp = $(btn.dataset.target);
-    const delta = +btn.dataset.delta;
-    let val = parseInt(inp.value) + delta;
-    val = Math.max(+inp.min, Math.min(+inp.max, val));
-    inp.value = val;
-    inp.dispatchEvent(new Event('input'));
+// ─── Number controls ───
+document.querySelectorAll('.num-ctrl button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const inp=$(btn.dataset.target);
+    let val=parseInt(inp.value)+(+btn.dataset.delta);
+    val=Math.max(+inp.min, Math.min(+inp.max, val));
+    inp.value=val; inp.dispatchEvent(new Event('input'));
   });
 });
-$('secInput').addEventListener('input', e => { secPerEx = Math.max(1, parseInt(e.target.value)||1); });
-$('setInput').addEventListener('input', e => { totalSets = Math.max(1, parseInt(e.target.value)||1); });
-$('restInput').addEventListener('input', e => { restSec = Math.max(0, parseInt(e.target.value)||0); });
+$('secInput').addEventListener('input',e=>{secPerEx=Math.max(1,parseInt(e.target.value)||1);});
+$('setInput').addEventListener('input',e=>{totalSets=Math.max(1,parseInt(e.target.value)||1);});
+$('restInput').addEventListener('input',e=>{restSec=Math.max(0,parseInt(e.target.value)||0);});
 
-// Sound controls
-$('soundEnabled').addEventListener('change', e => {
-  soundEnabled = e.target.checked;
-  $('beepTypeRow').style.opacity = soundEnabled ? '1' : '0.4';
-  $('volRow').style.opacity = soundEnabled ? '1' : '0.4';
-  $('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
-  $('soundToggleBtn').classList.toggle('muted', !soundEnabled);
+// ─── Sound controls ───
+function setSoundUI(on){
+  soundEnabled=on;
+  $('soundEnabled').checked=on;
+  $('soundOptions').style.opacity=on?'1':'0.4';
+  $('soundOptions').style.pointerEvents=on?'':'none';
+  $('soundToggleBtn').textContent=on?'🔊':'🔇';
+  $('soundToggleBtn').classList.toggle('muted',!on);
+}
+$('soundEnabled').addEventListener('change',e=>setSoundUI(e.target.checked));
+$('soundToggleBtn').addEventListener('click',()=>setSoundUI(!soundEnabled));
+
+document.querySelectorAll('[data-type="ex"]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-type="ex"]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); exSound=btn.dataset.sound;
+  });
 });
-
-document.querySelectorAll('.beep-type-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.beep-type-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    beepType = btn.dataset.type;
+document.querySelectorAll('[data-type="rest"]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[data-type="rest"]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); restSound=btn.dataset.sound;
   });
 });
 
-$('volSlider').addEventListener('input', e => {
-  volume = e.target.value / 100;
-  $('volPct').textContent = e.target.value + '%';
+$('testExBtn').addEventListener('click',()=>{
+  if(!soundEnabled){alert('소리가 꺼져 있어요.');return;}
+  playExBeep(exSound);
+});
+$('testRestBtn').addEventListener('click',()=>{
+  if(!soundEnabled){alert('소리가 꺼져 있어요.');return;}
+  // 5초 카운트다운 시뮬레이션: 4회 단음 후 종료음
+  [0,0.4,0.8,1.2].forEach(t=>{
+    setTimeout(()=>playRestTick(restSound), t*1000);
+  });
+  setTimeout(()=>playRestEnd(), 1700);
 });
 
-$('testSoundBtn').addEventListener('click', () => {
-  if (!soundEnabled) { alert('소리가 꺼져 있어요. 먼저 소리를 켜주세요.'); return; }
-  playBeep(beepType, volume);
+$('volSlider').addEventListener('input',e=>{
+  volume=e.target.value/100;
+  $('volPct').textContent=e.target.value+'%';
 });
 
-$('soundToggleBtn').addEventListener('click', () => {
-  soundEnabled = !soundEnabled;
-  $('soundEnabled').checked = soundEnabled;
-  $('beepTypeRow').style.opacity = soundEnabled ? '1' : '0.4';
-  $('volRow').style.opacity = soundEnabled ? '1' : '0.4';
-  $('soundToggleBtn').textContent = soundEnabled ? '🔊' : '🔇';
-  $('soundToggleBtn').classList.toggle('muted', !soundEnabled);
-});
-
-// Exercise list
-function renderExList() {
-  const list = $('exList');
-  list.innerHTML = '';
-  exercises.forEach((ex, i) => {
-    const item = document.createElement('div');
-    item.className = 'ex-item';
-    item.innerHTML = `<span class="ex-num">${i+1}</span>
+// ─── Exercise list ───
+function renderExList(){
+  const list=$('exList'); list.innerHTML='';
+  exercises.forEach((ex,i)=>{
+    const item=document.createElement('div');
+    item.className='ex-item';
+    item.innerHTML=`<span class="ex-num">${i+1}</span>
       <input class="ex-input" type="text" value="${ex}" placeholder="동작 이름" data-i="${i}">
       <button class="ex-del" data-i="${i}">×</button>`;
     list.appendChild(item);
   });
-  list.querySelectorAll('.ex-input').forEach(inp => inp.addEventListener('change', e => { exercises[+e.target.dataset.i] = e.target.value; }));
-  list.querySelectorAll('.ex-del').forEach(btn => btn.addEventListener('click', e => { exercises.splice(+e.currentTarget.dataset.i,1); renderExList(); }));
+  list.querySelectorAll('.ex-input').forEach(inp=>inp.addEventListener('change',e=>{exercises[+e.target.dataset.i]=e.target.value;}));
+  list.querySelectorAll('.ex-del').forEach(btn=>btn.addEventListener('click',e=>{exercises.splice(+e.currentTarget.dataset.i,1);renderExList();}));
 }
 
-function updateRing(frac, time) {
-  const offset = C * (1 - Math.max(0, frac));
-  $('ringFg').style.strokeDasharray = C;
-  $('ringFg').style.strokeDashoffset = offset;
-  $('ringTime').textContent = time;
+// ─── Ring / progress ───
+function updateRing(frac,time){
+  const offset=C*(1-Math.max(0,frac));
+  $('ringFg').style.strokeDasharray=C;
+  $('ringFg').style.strokeDashoffset=offset;
+  $('ringTime').textContent=time;
 }
-function updateProgress() {
-  const pct = Math.round((completedSteps / totalSteps) * 100);
-  $('progressFill').style.width = pct + '%';
-  $('progressPct').textContent = pct + '%';
+function updateProgress(){
+  const pct=Math.round((completedSteps/totalSteps)*100);
+  $('progressFill').style.width=pct+'%';
+  $('progressPct').textContent=pct+'%';
 }
 
-function showSetup(){ $('setupView').classList.remove('hidden'); $('timerView').classList.remove('active'); $('doneView').classList.remove('active'); }
-function showTimer(){ $('setupView').classList.add('hidden'); $('timerView').classList.add('active'); $('doneView').classList.remove('active'); }
-function showDone(){ $('setupView').classList.add('hidden'); $('timerView').classList.remove('active'); $('doneView').classList.add('active'); }
+// ─── View switches ───
+function showSetup(){$('setupView').classList.remove('hidden');$('timerView').classList.remove('active');$('doneView').classList.remove('active');}
+function showTimer(){$('setupView').classList.add('hidden');$('timerView').classList.add('active');$('doneView').classList.remove('active');}
+function showDone(){$('setupView').classList.add('hidden');$('timerView').classList.remove('active');$('doneView').classList.add('active');}
 
-function startExercise() {
+// ─── Timer logic ───
+function startExercise(){
   phase='exercise'; timeLeft=secPerEx;
-  $('phaseBar').textContent='운동 중'; $('phaseBar').className='phase-bar exercise';
+  $('phaseLabel').textContent='운동 중';
+  $('phaseBar').className='phase-bar exercise';
   $('ringFg').className='ring-fg';
   tick();
 }
-function startRest() {
-  if(restSec===0){ currentSet++; currentExIdx=0; startExercise(); return; }
+function startRest(){
+  if(restSec===0){currentSet++;currentExIdx=0;startExercise();return;}
   phase='rest'; timeLeft=restSec;
-  $('phaseBar').textContent='세트 휴식 중'; $('phaseBar').className='phase-bar rest';
+  $('phaseLabel').textContent='세트 휴식 중';
+  $('phaseBar').className='phase-bar rest';
   $('ringFg').className='ring-fg rest-ring';
   $('currentEx').textContent='휴식';
   $('nextEx').textContent=`다음 세트: ${currentSet+1} / ${totalSets}`;
   tick();
 }
 
-function tick() {
+function tick(){
   clearInterval(timer);
   if(paused) return;
   updateDisplay();
-  timer = setInterval(() => {
+  timer=setInterval(()=>{
     if(paused) return;
     timeLeft--;
-    if(timeLeft<=0){ clearInterval(timer); onStepDone(); }
+
+    // 휴식 카운트다운: 5초 전부터 매초 단음
+    if(phase==='rest' && timeLeft>0 && timeLeft<=5){
+      if(soundEnabled) playRestTick(restSound);
+      $('ringFg').className='ring-fg danger-ring';
+      $('phaseBar').className='phase-bar rest danger';
+    }
+    // 휴식 종료: 길게 띠~~
+    if(phase==='rest' && timeLeft===0){
+      if(soundEnabled) playRestEnd();
+    }
+
+    if(timeLeft<=0){clearInterval(timer);onStepDone();}
     else updateDisplay();
-  }, 1000);
+  },1000);
 }
 
-function updateDisplay() {
+function updateDisplay(){
   if(phase==='exercise'){
-    const ex=exercises[currentExIdx]||'—';
+    $('currentEx').textContent=exercises[currentExIdx]||'—';
     const nxt=exercises[currentExIdx+1];
-    $('currentEx').textContent=ex;
     $('nextEx').textContent=nxt?`다음: ${nxt}`:(currentSet<totalSets&&restSec>0?'다음: 휴식':'마지막 동작!');
     $('setDisp').textContent=currentSet;
     $('exDisp').textContent=currentExIdx+1;
@@ -463,63 +614,106 @@ function updateDisplay() {
   updateProgress();
 }
 
-function onStepDone() {
-  beep();
-  completedSteps++;
+function onStepDone(){
   if(phase==='exercise'){
+    if(soundEnabled) playExBeep(exSound);
+    completedSteps++;
     currentExIdx++;
     if(currentExIdx>=exercises.length){
-      if(currentSet>=totalSets){ finishWorkout(); return; }
-      restSec>0 ? startRest() : (currentSet++, currentExIdx=0, startExercise());
+      if(currentSet>=totalSets){finishWorkout();return;}
+      restSec>0?startRest():(currentSet++,currentExIdx=0,startExercise());
     } else startExercise();
-  } else if(phase==='rest'){ currentSet++; currentExIdx=0; startExercise(); }
+  } else if(phase==='rest'){
+    completedSteps++;
+    currentSet++;currentExIdx=0;startExercise();
+  }
 }
 
-function finishWorkout() {
+function finishWorkout(){
   clearInterval(timer);
-  if(soundEnabled) playFinishBeep();
+  if(soundEnabled) playFinish();
   const elapsed=Math.round((Date.now()-startTime)/1000);
-  const mm=Math.floor(elapsed/60), ss=elapsed%60;
+  const mm=Math.floor(elapsed/60),ss=elapsed%60;
   $('doneSet').textContent=totalSets;
   $('doneEx').textContent=exercises.length*totalSets;
   $('doneTime').textContent=mm>0?`${mm}분 ${ss}초`:`${ss}초`;
   showDone();
 }
 
-$('addExBtn').addEventListener('click', ()=>{
+// ─── Buttons ───
+$('addExBtn').addEventListener('click',()=>{
   exercises.push(''); renderExList();
-  const ins=document.querySelectorAll('.ex-input'); ins[ins.length-1].focus();
+  document.querySelectorAll('.ex-input')[exercises.length-1].focus();
 });
-
-$('startBtn').addEventListener('click', ()=>{
+$('startBtn').addEventListener('click',()=>{
   exercises=exercises.filter(e=>e.trim()!=='');
-  if(exercises.length===0){alert('동작을 최소 1개 이상 입력해주세요.'); return;}
+  if(!exercises.length){alert('동작을 최소 1개 이상 입력해주세요.');return;}
   secPerEx=Math.max(1,parseInt($('secInput').value)||1);
   totalSets=Math.max(1,parseInt($('setInput').value)||1);
   restSec=Math.max(0,parseInt($('restInput').value)||0);
-  currentSet=1; currentExIdx=0; paused=false;
+  currentSet=1;currentExIdx=0;paused=false;
   startTime=Date.now();
   totalSteps=exercises.length*totalSets+(restSec>0?(totalSets-1):0);
   completedSteps=0;
   $('exTotal').textContent=exercises.length;
   $('setTotal').textContent=totalSets;
+  $('pauseBtn').textContent='⏸ 일시정지';
   showTimer(); startExercise();
 });
-
-$('pauseBtn').addEventListener('click', ()=>{
+$('pauseBtn').addEventListener('click',()=>{
   paused=!paused;
   $('pauseBtn').textContent=paused?'▶ 계속':'⏸ 일시정지';
   if(!paused) tick();
 });
-$('skipBtn').addEventListener('click', ()=>{ clearInterval(timer); timeLeft=0; onStepDone(); });
-$('stopBtn').addEventListener('click', ()=>{ clearInterval(timer); paused=false; showSetup(); });
-$('restartBtn').addEventListener('click', ()=>showSetup());
+$('skipBtn').addEventListener('click',()=>{clearInterval(timer);timeLeft=0;onStepDone();});
+$('stopBtn').addEventListener('click',()=>{clearInterval(timer);paused=false;showSetup();});
+$('restartBtn').addEventListener('click',()=>showSetup());
 
-// PWA
+// ─── 재설정 모달 ───
+$('resetBtn').addEventListener('click',()=>{
+  clearInterval(timer);
+  $('rSecInput').value=secPerEx;
+  $('rSetInput').value=totalSets;
+  $('rRestInput').value=restSec;
+  $('resetModal').classList.add('show');
+});
+$('modalCancel').addEventListener('click',()=>{
+  $('resetModal').classList.remove('show');
+  if(!paused) tick();
+});
+$('modalApply').addEventListener('click',()=>{
+  $('resetModal').classList.remove('show');
+  secPerEx=Math.max(1,parseInt($('rSecInput').value)||1);
+  totalSets=Math.max(1,parseInt($('rSetInput').value)||1);
+  restSec=Math.max(0,parseInt($('rRestInput').value)||0);
+  // 설정 화면 숫자도 동기화
+  $('secInput').value=secPerEx;
+  $('setInput').value=totalSets;
+  $('restInput').value=restSec;
+  // 전체 스텝 재계산 (진행률 표시용), 현재 위치는 유지
+  totalSteps=exercises.length*totalSets+(restSec>0?(totalSets-1):0);
+  // 현재 세트가 새 totalSets 초과면 마지막 세트로 클램프
+  if(currentSet>totalSets){ currentSet=totalSets; currentExIdx=0; }
+  $('exTotal').textContent=exercises.length;
+  $('setTotal').textContent=totalSets;
+  paused=false;
+  $('pauseBtn').textContent='⏸ 일시정지';
+  // 현재 페이즈 그대로 이어서 시작
+  if(phase==='rest') startRest();
+  else startExercise();
+});
+$('resetModal').addEventListener('click',e=>{
+  if(e.target===$('resetModal')){
+    $('resetModal').classList.remove('show');
+    if(!paused) tick();
+  }
+});
+
+// ─── PWA ───
 let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredPrompt=e; $('installBanner').classList.add('show'); });
-$('installBtn').addEventListener('click', ()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{ deferredPrompt=null; $('installBanner').classList.remove('show'); }); });
-window.addEventListener('appinstalled', ()=>$('installBanner').classList.remove('show'));
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;$('installBanner').classList.add('show');});
+$('installBtn').addEventListener('click',()=>{if(!deferredPrompt)return;deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;$('installBanner').classList.remove('show');});});
+window.addEventListener('appinstalled',()=>$('installBanner').classList.remove('show'));
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 
 renderExList();

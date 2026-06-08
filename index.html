@@ -236,12 +236,13 @@
             <span class="slabel">휴식 카운트다운</span>
             <div class="scontent">
               <div class="chip-row" id="restBeepBtns">
-                <button class="chip active" data-type="rest" data-sound="tick">띠·띠·띠</button>
+                <button class="chip active" data-type="rest" data-sound="kbs">📺 KBS식</button>
+                <button class="chip" data-type="rest" data-sound="tick">띠·띠·띠</button>
                 <button class="chip" data-type="rest" data-sound="blip">삑·삑·삑</button>
                 <button class="chip" data-type="rest" data-sound="drum">둑·둑·둑</button>
                 <button class="chip" data-type="rest" data-sound="wood">딱·딱·딱</button>
               </div>
-              <div class="hint">💡 휴식 마지막 5초마다 단음 → 종료 시 길게 띠~~</div>
+              <div class="hint">💡 휴식 마지막 5초 단음(E5 659Hz) → 종료 시 G4 길게~~</div>
               <button class="test-btn" id="testRestBtn">▶ 카운트다운 미리 듣기</button>
             </div>
           </div>
@@ -379,7 +380,7 @@ let totalSteps=0, completedSteps=0;
 const C = 2*Math.PI*86;
 
 // Sound state
-let soundEnabled=true, exSound='ping', restSound='tick', volume=0.7;
+let soundEnabled=true, exSound='ping', restSound='kbs', volume=0.7;
 let audioCtx=null;
 
 function getCtx(){
@@ -407,35 +408,82 @@ function playExBeep(snd, vol){
   try{
     const c=getCtx();
     if(snd==='ping'){
-      // 맑은 띵!
+      // 맑은 띵! (벨 계열)
       tone(c,1046,0,0.07,v*0.9);
       tone(c,1318,0.05,0.15,v*0.55);
     } else if(snd==='up'){
-      // 띠딩↑ 상승
       tone(c,660,0,0.1,v*0.8,'sine',990);
       tone(c,990,0.14,0.16,v*0.7,'sine',1200);
     } else if(snd==='whistle'){
-      // 삐익~ 호루라기
       tone(c,1300,0,0.04,v*0.9,'square');
       tone(c,1500,0.04,0.2,v*0.5,'sine',1400);
     } else if(snd==='pop'){
-      // 뽁! 통통
       tone(c,400,0,0.04,v,'triangle',100);
       tone(c,900,0,0.07,v*0.35,'sine');
     } else if(snd==='dding'){
-      // 딩동 2음
       tone(c,784,0,0.13,v*0.8);
       tone(c,523,0.16,0.2,v*0.7);
     }
   }catch(e){}
 }
 
-// ── 휴식 카운트다운 단음 4종 ──
+// ── KBS 9시 뉴스 시그널 단음 (영상 25초: E5 659Hz 맑은 딩) ──
+function playKBSTick(v){
+  try{
+    const c=getCtx();
+    // E5(659Hz) 맑고 짧은 딩 — 사인파 + 살짝 배음
+    const osc=c.createOscillator(), g=c.createGain();
+    osc.connect(g); g.connect(c.destination);
+    osc.type='sine'; osc.frequency.value=659.26;
+    g.gain.setValueAtTime(v*0.85, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.22);
+    osc.start(c.currentTime); osc.stop(c.currentTime+0.23);
+    // 배음 (1옥타브 위, 아주 약하게)
+    const osc2=c.createOscillator(), g2=c.createGain();
+    osc2.connect(g2); g2.connect(c.destination);
+    osc2.type='sine'; osc2.frequency.value=1318.51;
+    g2.gain.setValueAtTime(v*0.15, c.currentTime);
+    g2.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.12);
+    osc2.start(c.currentTime); osc2.stop(c.currentTime+0.13);
+  }catch(e){}
+}
+
+// ── KBS 9시 뉴스 시그널 종료음 (영상 29초: G4 392Hz 길게~~) ──
+function playKBSEnd(v){
+  try{
+    const c=getCtx();
+    // 짧은 E5 예비음 2번
+    const makeNote=(freq,start,dur,vol)=>{
+      const o=c.createOscillator(), g=c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type='sine'; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol, c.currentTime+start);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime+start+dur);
+      o.start(c.currentTime+start); o.stop(c.currentTime+start+dur+0.01);
+    };
+    makeNote(659.26, 0,    0.18, v*0.8);  // E5 짧게
+    makeNote(659.26, 0.22, 0.18, v*0.8);  // E5 짧게
+    // G4 길게 ~~ (1.2초 sustain 후 서서히 페이드)
+    const oL=c.createOscillator(), gL=c.createGain();
+    oL.connect(gL); gL.connect(c.destination);
+    oL.type='sine'; oL.frequency.value=392.00; // G4
+    gL.gain.setValueAtTime(v*0.9,  c.currentTime+0.44);
+    gL.gain.setValueAtTime(v*0.88, c.currentTime+0.44+1.0); // sustain
+    gL.gain.exponentialRampToValueAtTime(0.001, c.currentTime+0.44+1.6);
+    oL.start(c.currentTime+0.44); oL.stop(c.currentTime+0.44+1.65);
+    // 배음 G5 아주 약하게
+    makeNote(784.00, 0.44, 0.6, v*0.2); // G5
+  }catch(e){}
+}
+
+// ── 휴식 카운트다운 단음 (KBS 포함 5종) ──
 function playRestTick(snd, vol){
   const v=vol??volume;
   try{
     const c=getCtx();
-    if(snd==='tick'){
+    if(snd==='kbs'){
+      playKBSTick(v);
+    } else if(snd==='tick'){
       tone(c,880,0,0.07,v*0.65);
     } else if(snd==='blip'){
       tone(c,1600,0,0.05,v*0.55,'square');
@@ -448,16 +496,19 @@ function playRestTick(snd, vol){
   }catch(e){}
 }
 
-// ── 휴식 종료 길게 띠~~ ──
+// ── 휴식 종료음 (KBS: E5딩딩→G4길게, 나머지: 기존) ──
 function playRestEnd(vol){
   const v=vol??volume;
-  try{
-    const c=getCtx();
-    // 짧은 알림 후 길게 이어지는 상승 신호음
-    tone(c,880,0,0.06,v*0.7);
-    tone(c,880,0.08,0.06,v*0.7);
-    tone(c,1100,0.18,0.7,v*0.9,'sine',1200);
-  }catch(e){}
+  if(restSound==='kbs'){
+    playKBSEnd(v);
+  } else {
+    try{
+      const c=getCtx();
+      tone(c,880,0,0.06,v*0.7);
+      tone(c,880,0.08,0.06,v*0.7);
+      tone(c,1100,0.18,0.7,v*0.9,'sine',1200);
+    }catch(e){}
+  }
 }
 
 // ── 운동 완료 팡파레 ──
